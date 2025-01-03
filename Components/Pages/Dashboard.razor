@@ -1,0 +1,467 @@
+﻿@* 
+@page "/dashboard"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IUserService userService
+@inject NavigationManager navigationManager
+
+<h3 class="text-center my-4">Dashboard</h3>
+
+<div class="container">
+    <!-- Top Metrics -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Current Balance</h5>
+                    <h3>2000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Inflow</h5>
+                    <h3>20000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Outflow</h5>
+                    <h3>10000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Total Debts</h5>
+                    <!-- Bind the totalDebts variable -->
+                    <h3>@totalDebts</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions and Chart -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Transactions
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Chart Placeholder</h5>
+                    <!-- Add your chart implementation here -->
+                    <div style="height: 200px; background-color: #f8f9fa;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Metrics -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Highest Inflow</h5>
+                    <h3>50000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Highest Outflow</h5>
+                    <h3>15000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Highest Debt</h5>
+                    <h3>6000</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debt Summary -->
+    <div class="row text-center mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Cleared Debts</h5>
+                    <h3>5000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Pending Debts</h5>
+                    <h3>15000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Total Transactions</h5>
+                    <h3>60000</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Debts Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Pending Debts
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Debt Source</th>
+                                <th>Transaction Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int totalDebts;
+
+    [Inject]
+    private IDebtService debtServices { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch the total debts dynamically
+        totalDebts = await debtServices.GetTotalDebtsAsync();
+    }
+
+    private async Task RefreshTotalDebts()
+    {
+        // Refresh total debts
+        totalDebts = await debtServices.GetTotalDebtsAsync();
+    }
+}
+ *@
+
+
+
+ @page "/dashboard"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IDebtService debtServices
+@inject ICashflows cashFlowService
+
+@inject NavigationManager navigationManager
+
+<h3 class="text-center my-4">Dashboard</h3>
+
+<div class="container">
+    <!-- Top Metrics -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Current Balance</h5>
+                    <h3>2000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Inflow</h5>
+                    <h3>@totalInflow</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Outflow</h5>
+                    <h3>@totalExpense</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Total Debts</h5>
+                    <h3>@totalDebts</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Transactions
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                    <li class="list-group-item">Food</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Chart Placeholder</h5>
+                    <!-- Add your chart implementation here -->
+                    <div style="height: 200px; background-color: #f8f9fa;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Additional Metrics -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Highest Inflow</h5>
+                    <h3>@highestInflow</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Highest Outflow</h5>
+                    <h3>@highestOutflow</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Highest Debt</h5>
+                    <h3>@highestDebt</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debt Summary -->
+    <div class="row text-center mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Cleared Debts</h5>
+                    <h3>5000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Pending Debts</h5>
+                    <h3>15000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Total Transactions</h5>
+                    <h3>60000</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Debts Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Pending Debts
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Debt Source</th>
+                                <th>Transaction Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                            <tr>
+                                <td>Salman Khan</td>
+                                <td>12/18/2024</td>
+                                <td>12/25/2024</td>
+                                <td>Rs.5000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Pending Debts Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Pending Debts</span>
+                    <button class="btn btn-sm btn-primary" @onclick="RefreshTotalDebts">Refresh</button>
+                </div>
+                <div class="table-responsive">
+                    @if (pendingDebts?.Any() ?? false)
+                    {
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Debt Source</th>
+                                    <th>Transaction Date</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var debt in pendingDebts)
+                                {
+                                    <tr>
+                                        @* <td>@debt.Source</td> *@
+                                        <td>@debt.TransactionDate.ToShortDateString()</td>
+                                        <td>@debt.DueDate.ToShortDateString()</td>
+                                        <td>Rs.@debt.Amount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning m-3" role="alert">
+                            No pending debts available.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+@* </div> *@
+
+@code {
+    private int totalDebts;
+    private List<Debt> pendingDebts = new();
+    private int totalInflow;
+    private int totalExpense;
+    private int highestInflow;
+    private int highestOutflow;
+    private int highestDebt;
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadDashboardDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        // Fetch total debts
+        totalDebts = await debtServices.GetTotalDebtsAsync();
+
+        // Load pending debts
+        pendingDebts = await debtServices.LoadCashDebtAsync();
+        var allCashFlows = await cashFlowService.LoadCashFlowAsync();
+        totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
+        totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
+        // Calculate highest income and highest expense
+        highestInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Max(cf => cf.Amount);
+        highestOutflow = allCashFlows.Where(cf => cf.TransactionType == "expense").Max(cf => cf.Amount);
+        highestDebt = pendingDebts.Any() ? pendingDebts.Max(d => d.Amount) : 0;
+        
+    }
+
+    private async Task RefreshTotalDebts()
+    {
+        try
+        {
+            // Refresh total debts and pending debts
+            await LoadDashboardDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing dashboard data: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,175 @@
+﻿@page "/debtTransactions"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IDebtService debtService
+
+<h3 class="text-center mt-4">Debt Transactions</h3>
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <!-- Search Section -->
+        <div class="mb-4">
+            <div class="row">
+                <!-- Search -->
+                <div class="col-md-12">
+                    <label for="searchTerm" class="form-label">Search by Title or Note</label>
+                    <input type="text" id="searchTerm" class="form-control" placeholder="Search by title or note" @bind="searchTerm">
+                </div>
+            </div>
+            <!-- Search Button -->
+            <div class="row mt-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <button class="btn btn-primary" @onclick="ApplySearchFilter">Search</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="mb-4">
+            <div class="row">
+                <!-- Filter by Tag -->
+                <div class="col-md-3">
+                    <label for="filterTag" class="form-label">Filter by Tag</label>
+                    <select id="filterTag" class="form-select" @bind="filterTag">
+                        <option value="">All</option>
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <!-- Filter by Date Range -->
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" id="startDate" class="form-control" @bind="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" id="endDate" class="form-control" @bind="endDate">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <!-- Sort by Date -->
+                <div class="col-md-3">
+                    <label for="sortOrder" class="form-label">Sort by Date</label>
+                    <select id="sortOrder" class="form-select" @bind="sortOrder">
+                        <option value="desc">Newest First</option>
+                        <option value="asc">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Apply Filters Button -->
+            <div class="row mt-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <button class="btn btn-primary" @onclick="ApplyOtherFilters">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debt Transactions Table -->
+        <div class="table-responsive">
+            @if (filteredDebtTransactions?.Any() ?? false)
+            {
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Due Date</th>
+                            <th>Tag</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var debt in filteredDebtTransactions)
+                        {
+                            <tr>
+                                <td>@(string.IsNullOrEmpty(debt.Title) ? "N/A" : debt.Title)</td>
+                                <td>Rs. @(debt.Amount)</td>
+                                <td>@debt.TransactionDate.ToShortDateString()</td>
+                                <td>@debt.DueDate.ToShortDateString()</td>
+                                <td>@(string.IsNullOrWhiteSpace(debt.DebtTransactionTag) ? debt.DebtCustomTag : debt.DebtTransactionTag)</td>
+                                <td>@(string.IsNullOrEmpty(debt.DebtNote) ? "N/A" : debt.DebtNote)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">
+                    No debt transactions available.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Debt> debts = new();
+    private List<Debt> filteredDebtTransactions = new();
+
+    private string filterTag = "";
+    private DateTime? startDate = null;
+    private DateTime? endDate = null;
+    private string searchTerm = "";
+    private string sortOrder = "desc";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetch all debt transactions
+            debts = await debtService.LoadCashDebtAsync();
+            ApplyOtherFilters(); // Apply the filters and sorting as default
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading debt transactions: {ex.Message}");
+        }
+    }
+
+    private void ApplySearchFilter()
+    {
+        filteredDebtTransactions = debts;
+
+        // Search by Title or Note, ensuring that neither are null before calling Contains
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            filteredDebtTransactions = filteredDebtTransactions.Where(d =>
+                (d.Title != null && d.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (d.DebtNote != null && d.DebtNote.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+    }
+
+    private void ApplyOtherFilters()
+    {
+        filteredDebtTransactions = debts;
+
+        // Filter by Tag
+        if (!string.IsNullOrEmpty(filterTag))
+        {
+            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.DebtTransactionTag == filterTag || d.DebtCustomTag == filterTag).ToList();
+        }
+
+        // Filter by Date Range
+        if (startDate.HasValue)
+        {
+            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.TransactionDate >= startDate.Value).ToList();
+        }
+        if (endDate.HasValue)
+        {
+            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.TransactionDate <= endDate.Value).ToList();
+        }
+
+        // Sort by Date
+        if (sortOrder == "desc")
+        {
+            filteredDebtTransactions = filteredDebtTransactions.OrderByDescending(d => d.TransactionDate).ToList();
+        }
+        else
+        {
+            filteredDebtTransactions = filteredDebtTransactions.OrderBy(d => d.TransactionDate).ToList();
+        }
+    }
+}

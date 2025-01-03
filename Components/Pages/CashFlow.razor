@@ -1,0 +1,99 @@
+﻿# ReactWebRtc
+@page "/cashflow"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject ICashflows cashFlowService
+@inject NavigationManager navigationManager
+
+<h3 class="text-center mt-4">Cash Flow</h3>
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <form>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="transactionName" class="form-label">Transaction Name</label>
+                    <input type="text" @bind="newCashFlow.TransactionName" class="form-control" id="transactionName" placeholder="Enter transaction name">
+                </div>
+                @* <div class="col">
+                    <label for="transactionType" class="form-label">Transaction Type</label>
+                    <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div> *@
+                <div class="col">
+                    <label for="transactionType" class="form-label">Transaction Type</label>
+                    <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
+                        <option value="" disabled selected>Select transaction type</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="date" class="form-label">Date</label>
+                    <input @bind="newCashFlow.FlowDate" type="date" class="form-control" id="date"> 
+
+                </div>
+                <div class="col">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input @bind="newCashFlow.Amount "type=" number" class="form-control" id="amount" placeholder="Enter amount">
+                </div>
+            </div>
+            <div class="row mb-3">
+             
+                <div class="col">
+                    <label for="transactionTag" class="form-label">Transaction Tag</label>
+                    <select @bind="newCashFlow.TransactionTag" class="form-select" id="transactionTag">
+                        <option value="" disabled selected>Select Transaction Tag</option>
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="customTag" class="form-label">Custom Tag (optional)</label>
+                    <input @bind="newCashFlow.CustomTag" type="text" class="form-control" id="customTag" placeholder="Enter custom tag">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="note" class="form-label">Note</label>
+                <textarea @bind="newCashFlow.Note" class=" form-control" id="note" placeholder="Enter note"></textarea>
+            </div>
+            <button @onclick="AddNewCashFlow" type="submit" class="btn btn-primary w-100">Submit</button>
+        </form>
+    </div>
+</div>
+@if (errorMessage != null)
+{
+    <p class="error-message">@errorMessage</p>
+}
+@code {
+    private ADCourseWork.Models.CashFlow newCashFlow = new ADCourseWork.Models.CashFlow(); // Explicitly use the fully qualified name
+
+    private string errorMessage;
+
+
+    private async Task AddNewCashFlow()
+    {
+        try
+        {
+            // Save the cash flow using the service
+            await cashFlowService.SaveCashFlowAsync(newCashFlow);
+
+            // Reset the form after saving
+            newCashFlow = new ADCourseWork.Models.CashFlow();
+            navigationManager.NavigateTo("/dashboard");
+            errorMessage = null; // Clear any previous error messages
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while adding the cash flow: {ex.Message}";
+            Console.WriteLine(errorMessage); // Log for debugging
+        }
+    }
+
+}

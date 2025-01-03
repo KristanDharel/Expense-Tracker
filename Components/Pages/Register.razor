@@ -1,0 +1,85 @@
+@page "/register"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IUserService userService
+@inject NavigationManager navigationManager
+
+
+<h3 class="text-center mt-4">Register</h3>
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <form>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="firstName" class="form-label">User Name</label>
+                    <input type="text" @bind="newUser.UserName" class="form-control" id="UserName" placeholder="Enter User name">
+                </div>
+                <div class="col">
+                    <label for="lastName" class="form-label">Password</label>
+                    <input type="text" @bind="newUser.Password" class="form-control" id="Password" placeholder="Enter password">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" @bind="newUser.Email" class="form-control" id="Email" placeholder="Enter email">
+            </div>
+            <div class="mb-3">
+                <label for="currency" class="form-label">Currency Type</label>
+                <select @bind="newUser.Currency" class="form-select" id="Currency">
+                    <option value="" disabled selected>Select currency</option>
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" @onclick="AddNewUser">Sign in</button>
+        </form>
+    </div>
+</div>
+@if (errorMessage != null)
+{
+    <p class="error-message">@errorMessage</p>
+}
+
+
+
+  
+@code {
+
+    private User newUser = new User(); //obj created for User Class
+    private string errorMessage;
+
+    // New field for searching user
+    private int searchUserId;
+
+    // Field to hold retrieved user information
+    private User retrievedUser;
+
+    private async Task AddNewUser()
+    {
+        try
+        {
+            var existingUsers = await userService.LoadUsersAsync();
+            // condition chek
+
+
+            await userService.SaveUserAsync(newUser);
+            // Reset the new user object after saving.
+            newUser = new User();
+            errorMessage = null; // Clear any previous error messages
+            navigationManager.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while adding the user: {ex.Message}";
+            Console.WriteLine(errorMessage); // Log for debugging
+        }
+    }
+
+}

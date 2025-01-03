@@ -1,0 +1,83 @@
+﻿@page "/debt"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IDebtService debtServices
+@inject NavigationManager navigationManager
+
+<h3 class="text-center mt-4">Debt</h3>
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <form>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" @bind="newDebt.Title" class="form-control" id="title" placeholder="Enter title">
+                </div>
+                <div class="col">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" @bind="newDebt.Amount" class="form-control" id="amount" placeholder="Enter amount">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="transactionDate" class="form-label">Date of Transaction</label>
+                    <input type="date" @bind="newDebt.TransactionDate" class="form-control" id="transactionDate">
+                </div>
+                <div class="col">
+                    <label for="dueDate" class="form-label">Due Date</label>
+                    <input type="date" @bind="newDebt.DueDate" class="form-control" id="dueDate">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="transactionTag" class="form-label">Transaction Tag</label>
+                    <select @bind="newDebt.DebtTransactionTag" class="form-select" id="transactionTag">
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                        <option value="loan">Loan</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="customTags" class="form-label">Custom Tags</label>
+                    <input type="text" @bind="newDebt.DebtCustomTag" class="form-control" id="customTags" placeholder="Enter custom tags">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="note" class="form-label">Note</label>
+                <textarea @bind="newDebt.DebtNote" class="form-control" id="note" placeholder="Enter note"></textarea>
+            </div>
+            <button @onclick="AddNewDebt" type="submit" class="btn btn-primary w-100">Submit</button>
+        </form>
+    </div>
+</div>
+@if (errorMessage != null)
+{
+    <p class="error-message">@errorMessage</p>
+}
+
+@code {
+    private ADCourseWork.Models.Debt newDebt = new ADCourseWork.Models.Debt(); // Explic
+    private string errorMessage;
+
+    private async Task AddNewDebt()
+    {
+        try
+        {
+            // Save the debt using the service
+            await debtServices.SaveDebtFlowAsync(newDebt);
+
+
+
+            // Reset the form after saving
+            newDebt = new Debt();
+            navigationManager.NavigateTo("/dashboard");
+            errorMessage = null; // Clear any previous error messages
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while adding the debt: {ex.Message}";
+            Console.WriteLine(errorMessage); // Log for debugging
+        }
+    }
+}
