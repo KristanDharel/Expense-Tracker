@@ -15,11 +15,14 @@ namespace ADCourseWork.Models
         public string Title { get; set; }
 
         public int Amount { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid(); // Unique identifier
 
         public DateTime TransactionDate { get; set; }
         public DateTime DueDate { get; set; }
         public string DebtTransactionTag { get; set; }
         public string DebtCustomTag { get; set; }
+        public string DebtStatus { get; set; }
+
         public string DebtNote { get; set; }
 
 

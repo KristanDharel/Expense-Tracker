@@ -58,13 +58,22 @@
             </div>
             <div class="row mt-3">
                 <!-- Sort by Date -->
-                <div class="col-md-3">
+               @*  <div class="col-md-3">
                     <label for="sortOrder" class="form-label">Sort by Date</label>
                     <select id="sortOrder" class="form-select" @bind="sortOrder">
                         <option value="desc">Newest First</option>
                         <option value="asc">Oldest First</option>
                     </select>
+                </div> *@
+                <!-- Sort by Amount -->
+                <div class="col-md-3">
+                    <label for="sortOrder" class="form-label">Sort by Amount</label>
+                    <select id="sortOrder" class="form-select" @bind="sortOrder">
+                        <option value="desc">Highest First</option>
+                        <option value="asc">Lowest First</option>
+                    </select>
                 </div>
+
             </div>
             <!-- Apply Filters Button -->
             <div class="row mt-3">
@@ -103,6 +112,11 @@
                         }
                     </tbody>
                 </table>
+                <!-- Pagination Controls -->
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
+                    <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
+                </div>
             }
             else
             {
@@ -124,6 +138,8 @@
     private DateTime? endDate = null;
     private string searchTerm = "";
     private string sortOrder = "desc";
+    private int currentPage = 1;
+    private int pageSize = 5; // Change this value based on the desired page size
 
     protected override async Task OnInitializedAsync()
     {
@@ -138,6 +154,7 @@
             Console.WriteLine($"Error loading transactions: {ex.Message}");
         }
     }
+
 
     private void ApplySearchFilter()
     {
@@ -177,6 +194,15 @@
         {
             filteredTransactions = filteredTransactions.Where(t => t.FlowDate <= endDate.Value).ToList();
         }
+        // Sort by Amount
+        if (sortOrder == "desc")
+        {
+            filteredTransactions = filteredTransactions.OrderByDescending(t => t.Amount).ToList();
+        }
+        else
+        {
+            filteredTransactions = filteredTransactions.OrderBy(t => t.Amount).ToList();
+        }
 
         // Sort by Date
         if (sortOrder == "desc")
@@ -186,6 +212,28 @@
         else
         {
             filteredTransactions = filteredTransactions.OrderBy(t => t.FlowDate).ToList();
+        }
+        filteredTransactions = filteredTransactions.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    // Pagination methods
+    private bool HasPreviousPage => currentPage > 1;
+    private bool HasNextPage => filteredTransactions.Count == pageSize;
+    private void PreviousPage()
+    {
+        if (HasPreviousPage)
+        {
+            currentPage--;
+            ApplyOtherFilters();
+        }
+    }
+
+    private void NextPage()
+    {
+        if (HasNextPage)
+        {
+            currentPage++;
+            ApplyOtherFilters();
         }
     }
 }

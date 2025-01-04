@@ -14,6 +14,8 @@ namespace ADCourseWork.Services
 
         Task<List<Debt>> LoadCashDebtAsync();
         Task<int> GetTotalDebtsAsync();
+        Task UpdateDebtStatusAsync(Debt debt);
+
         //Task<List<Debt>> LoadDebtAsync();
     }
 }

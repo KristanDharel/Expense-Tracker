@@ -1,0 +1,167 @@
+@page "/dashboard"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject IDebtService debtServices
+@inject ICashflows cashFlowService
+@inject NavigationManager navigationManager
+
+<h3 class="text-center my-4">Dashboard</h3>
+
+<div class="container">
+    <!-- Top Metrics -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Current Balance</h5>
+                    <h3>2000</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Inflow</h5>
+                    <h3>@totalInflow</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Outflow</h5>
+                    <h3>@totalExpense</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Total Debts</h5>
+                    <h3>@totalDebts</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table with Toggle Button -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Top 5 Transactions</span>
+                    <button class="btn btn-sm btn-primary" @onclick="ToggleView">
+                        Switch to @viewToggleText View
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transaction in currentTransactions)
+                            {
+                                <tr>
+                                    <td>Rs.@transaction.Amount</td>
+                                    <td>@transaction.Type</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private int totalDebts;
+    private List<Debt> pendingDebts = new();
+    private int totalInflow;
+    private int totalExpense;
+    private int highestInflow;
+    private int highestOutflow;
+    private int highestDebt;
+    private List<Transaction> topHighestTransactions = new(); // List for top 5 highest transactions
+    private List<Transaction> topLowestTransactions = new(); // List for top 5 lowest transactions
+    private bool showHighest = true; // Boolean to toggle view
+    private List<Transaction> currentTransactions = new(); // Holds the transactions to display
+    private string viewToggleText = "Lowest"; // Text for toggle button
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadDashboardDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        // Fetch total debts
+        totalDebts = await debtServices.GetTotalDebtsAsync();
+
+        // Load pending debts
+        pendingDebts = await debtServices.LoadCashDebtAsync();
+        var allCashFlows = await cashFlowService.LoadCashFlowAsync();
+
+        // Calculate inflow and outflow totals
+        totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
+        totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
+
+        // Fetch the highest inflow, outflow, and debt amounts
+        highestInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Max(cf => cf.Amount);
+        highestOutflow = allCashFlows.Where(cf => cf.TransactionType == "expense").Max(cf => cf.Amount);
+        highestDebt = pendingDebts.Any() ? pendingDebts.Max(d => d.Amount) : 0;
+
+        // Combine and get top 5 transactions by amount
+        var transactions = new List<Transaction>();
+
+        transactions.AddRange(allCashFlows.Where(cf => cf.TransactionType == "income")
+            .OrderByDescending(cf => cf.Amount)
+            .Take(5)
+            .Select(cf => new Transaction { Amount = cf.Amount, Type = "Income" }));
+
+        transactions.AddRange(allCashFlows.Where(cf => cf.TransactionType == "expense")
+            .OrderByDescending(cf => cf.Amount)
+            .Take(5)
+            .Select(cf => new Transaction { Amount = cf.Amount, Type = "Expense" }));
+
+        transactions.AddRange(pendingDebts.OrderByDescending(d => d.Amount)
+            .Take(5)
+            .Select(d => new Transaction { Amount = d.Amount, Type = "Debt" }));
+
+        // Sort all transactions by amount in descending order and take the top 5 highest
+        topHighestTransactions = transactions.OrderByDescending(t => t.Amount).Take(5).ToList();
+
+        // Sort all transactions by amount in ascending order and take the top 5 lowest
+        topLowestTransactions = transactions.OrderBy(t => t.Amount).Take(5).ToList();
+
+        // Set the currentTransactions to the top highest initially
+        currentTransactions = topHighestTransactions;
+    }
+
+    private void ToggleView()
+    {
+        // Toggle between highest and lowest view
+        showHighest = !showHighest;
+        currentTransactions = showHighest ? topHighestTransactions : topLowestTransactions;
+        viewToggleText = showHighest ? "Lowest" : "Highest"; // Change the button text based on view
+    }
+
+    // Define a class to represent a unified transaction
+    public class Transaction
+    {
+        public int Amount { get; set; }
+        public string Type { get; set; }  // "Income", "Expense", "Debt"
+    }
+}

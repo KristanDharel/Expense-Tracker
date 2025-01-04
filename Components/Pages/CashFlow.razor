@@ -32,10 +32,14 @@
 
             </div>
             <div class="row mb-3">
-                <div class="col">
+                @* <div class="col">
                     <label for="date" class="form-label">Date</label>
                     <input @bind="newCashFlow.FlowDate" type="date" class="form-control" id="date"> 
 
+                </div> *@
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label"> Date</label>
+                    <input type="date" id="startDate" class="form-control" @bind="newCashFlow.FlowDate">
                 </div>
                 <div class="col">
                     <label for="amount" class="form-label">Amount</label>
@@ -51,7 +55,7 @@
                         <option value="food">Food</option>
                         <option value="transport">Transport</option>
                         <option value="shopping">Shopping</option>
-                        <option value="other">Other</option>
+                        <option value="other">Other</option>https://0.0.0.0/transactions
                     </select>
                 </div>
                 <div class="col">

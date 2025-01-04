@@ -17,6 +17,7 @@ namespace ADCourseWork.Services
             return debts.Sum(debt => debt.Amount);
         }
 
+
         public async Task SaveDebtFlowAsync(Debt debtFlow)
         {
             try
@@ -32,6 +33,8 @@ namespace ADCourseWork.Services
                 throw;
             }
         }
+      
+
 
         public async Task<List<Debt>> LoadCashDebtAsync()
         {
@@ -59,6 +62,42 @@ namespace ADCourseWork.Services
             {
                 Console.WriteLine($"Unexpected error while loading debts: {ex.Message}");
                 return new List<Debt>();
+            }
+        }
+        public async Task UpdateDebtStatusAsync(Debt debt)
+        {
+            try
+            {
+                // Load the existing debts
+                var debts = await LoadCashDebtAsync();
+
+                // Find the debt with the specified ID
+                var existingDebt = debts.FirstOrDefault(d => d.Id == debt.Id);
+
+                if (existingDebt != null)
+                {
+                    // Update the status of the debt
+                    existingDebt.DebtStatus = debt.DebtStatus;
+
+                    // Save the updated debts back to the JSON file
+                    await SaveDebtsAsync(debts);
+
+                    // If the status is "Cleared", remove the debt from the pending debts list
+                    if (debt.DebtStatus == "Cleared")
+                    {
+                        debts.Remove(existingDebt);
+                        await SaveDebtsAsync(debts);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Debt with ID {debt.Id} not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating debt status: {ex.Message}");
+                throw;
             }
         }
 

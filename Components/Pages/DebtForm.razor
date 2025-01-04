@@ -32,6 +32,8 @@
                 <div class="col">
                     <label for="transactionTag" class="form-label">Transaction Tag</label>
                     <select @bind="newDebt.DebtTransactionTag" class="form-select" id="transactionTag">
+                        <option value="" disabled selected>Select Transaction Tag </option>
+
                         <option value="personal">Personal</option>
                         <option value="business">Business</option>
                         <option value="loan">Loan</option>
@@ -43,6 +45,14 @@
                     <input type="text" @bind="newDebt.DebtCustomTag" class="form-control" id="customTags" placeholder="Enter custom tags">
                 </div>
             </div>
+          @*   <div class="col">
+                <label for="debtStatus" class="form-label">Debt Status</label>
+                <select @bind="newDebt.DebtStatus" class="form-select" id="debtStatus">
+                    <option value="" disabled selected>Select Debt Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="cleared">Cleared</option>
+                </select>
+            </div> *@
             <div class="mb-3">
                 <label for="note" class="form-label">Note</label>
                 <textarea @bind="newDebt.DebtNote" class="form-control" id="note" placeholder="Enter note"></textarea>
@@ -57,7 +67,10 @@
 }
 
 @code {
-    private ADCourseWork.Models.Debt newDebt = new ADCourseWork.Models.Debt(); // Explic
+    private ADCourseWork.Models.Debt newDebt = new ADCourseWork.Models.Debt
+    {
+            DebtStatus = "pending" // Default status is "pending"
+    }; // Explic
     private string errorMessage;
 
     private async Task AddNewDebt()
