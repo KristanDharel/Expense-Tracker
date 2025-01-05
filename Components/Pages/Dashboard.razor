@@ -119,6 +119,14 @@
                 </div>
             </div>
         </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total No of Transactions</h5>
+                <h3>@totalNoTransaction</h3>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Debt Summary -->
@@ -220,6 +228,7 @@
     private List<Transaction> currentTransactions = new(); // Holds the transactions to display
     private string viewToggleText = "Lowest"; // Text for toggle button
     private int totalPendingDebts;
+    private int totalNoTransaction;
 
 
 
@@ -236,6 +245,7 @@
             Console.WriteLine($"Error loading dashboard data: {ex.Message}");
         }
     }
+    
     private void FilterDebts()
     {
         // Apply date range filter
@@ -273,6 +283,11 @@
         totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
         totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
         totalTransactions = totalInflow + totalDebts - totalExpense;
+        // count total no of transactions
+        int inflowCount = allCashFlows.Count(cf => cf.TransactionType == "income");
+        int outflowCount = allCashFlows.Count(cf => cf.TransactionType == "expense");
+        int debtCount = pendingDebts.Count;
+        totalNoTransaction = inflowCount + outflowCount + debtCount;
 
         // Calculate highest income and highest expense
         highestInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Max(cf => cf.Amount);
