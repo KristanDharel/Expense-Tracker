@@ -1,4 +1,8 @@
-﻿<MudNavMenu>
+﻿@inject AuthentucationStateService authStateService
+@inject NavigationManager navigationManager
+<MudText Typo="Typo.h4" Class="text-center mt-4">Bachaau</MudText>
+@* <MudNavMenu>
+   
     <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
     <MudNavLink Href="/register" Match="NavLinkMatch.Prefix">Register</MudNavLink>
     <MudNavLink Href="/login" Match="NavLinkMatch.Prefix">Login</MudNavLink>
@@ -8,3 +12,47 @@
     <MudNavLink Href="/transactions" Match="NavLinkMatch.Prefix">Transactions</MudNavLink>
     <MudNavLink Href="/debtTransactions" Match="NavLinkMatch.Prefix">Debt Transaction</MudNavLink>
 </MudNavMenu>
+ *@
+@inject AuthentucationStateService authStateService
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
+    @if (authStateService.IsAuthenticated)
+    {
+        <MudNavLink Href="/dashboard" Match="NavLinkMatch.Prefix">Dashboard</MudNavLink>
+        <MudNavLink Href="/cashflow" Match="NavLinkMatch.Prefix">Cashflow</MudNavLink>
+        <MudNavLink Href="/debt" Match="NavLinkMatch.Prefix">Debt Form</MudNavLink>
+        <MudNavLink Href="/transactions" Match="NavLinkMatch.Prefix">Transactions</MudNavLink>
+        <MudNavLink Href="/debtTransactions" Match="NavLinkMatch.Prefix">Debt Transaction</MudNavLink>
+         @* <MudButton OnClick="LogoutUser" Color="Color.Primary">Logout</MudButton> *@
+        <div class="d-flex align-items-center">
+            <MudButton OnClick="LogoutUser" Color="Color.Primary">Logout</MudButton>
+            <img src="logout.png" alt="Logout" style="width: 20px; height: 20px;" class="me-2" />
+
+        </div>
+    }
+    else
+    {
+        <MudNavLink Href="/register" Match="NavLinkMatch.Prefix">Register</MudNavLink>
+        <MudNavLink Href="/login" Match="NavLinkMatch.Prefix">Login</MudNavLink>
+    }
+</MudNavMenu>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Subscribe to authentication state changes
+        authStateService.OnAuthStateChanged += StateHasChanged;
+    }
+
+    // Unsubscribe when the component is disposed
+    public void Dispose()
+    {
+        authStateService.OnAuthStateChanged -= StateHasChanged;
+    }
+    private void LogoutUser()
+    {
+        authStateService.Logout(); // Call the Logout method
+        navigationManager.NavigateTo("/login"); // Redirect to login page after logout
+    }
+}

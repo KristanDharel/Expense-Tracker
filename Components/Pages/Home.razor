@@ -1,5 +1,60 @@
 ﻿@page "/"
+@using MudBlazor
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
+    <!-- Header Section -->
+    <MudPaper Class="text-center p-4" Elevation="2">
+        <MudText Typo="Typo.h2" Class="mb-2">Welcome to Bachaau</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mb-3">
+            Your personal finance assistant to manage expenses and savings effortlessly.
+        </MudText>
+        <MudButton Href="/register" Variant="Variant.Filled" Color="Color.Primary" Class="m-2">
+            Get Started
+        </MudButton>
+        <MudButton Href="/login" Variant="Variant.Outlined" Color="Color.Secondary" Class="m-2">
+            Login
+        </MudButton>
+    </MudPaper>
 
-Welcome to your new app.
+    <!-- Features Section -->
+    <MudGrid Class="mt-5">
+        <MudItem xs="12" md="4" Class="text-center">
+            <MudPaper Class="p-3" Elevation="1">
+                <img src="ex.png" alt="Track Expenses" class="mb-2" style="width: 90px;" />
+                <MudText Typo="Typo.h6">Track Expenses</MudText>
+                <MudText Typo="Typo.body2">
+                    Easily record your daily expenses and stay on top of your spending habits.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="text-center">
+            <MudPaper Class="p-3" Elevation="1">
+                <img src="bd.png" alt="Budget Management" class="mb-2" style="width: 90px;" />
+                <MudText Typo="Typo.h6">Budget Management</MudText>
+                <MudText Typo="Typo.body2">
+                    Set monthly budgets and ensure you save more every month.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="text-center">
+            <MudPaper Class="p-3" Elevation="1">
+                <img src="loss.png" alt="Debt Tracking" class="mb-2" style="width: 90px;" />
+                <MudText Typo="Typo.h6">Debt Tracking</MudText>
+                <MudText Typo="Typo.body2">
+                    Monitor your debts and plan repayments efficiently with reminders.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Call to Action -->
+    <MudPaper Class="text-center mt-5 p-4" Elevation="2">
+        <MudText Typo="Typo.h5" Class="mb-2">Ready to take control of your finances?</MudText>
+        <MudText Typo="Typo.body1" Class="mb-3">
+            Sign up today and start your journey towards financial freedom with Bachaau.
+        </MudText>
+        <MudButton Href="/register" Variant="Variant.Filled" Color="Color.Success" Class="m-2">
+            Sign Up Now
+        </MudButton>
+    </MudPaper>
+</MudContainer>

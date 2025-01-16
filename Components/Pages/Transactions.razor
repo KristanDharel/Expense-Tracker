@@ -6,27 +6,21 @@
 <h3 class="text-center mt-4">Transactions</h3>
 <div class="container mt-5">
     <div class="card shadow p-4">
-        <!-- Search Section -->
         <div class="mb-4">
             <div class="row">
-                <!-- Search -->
                 <div class="col-md-12">
                     <label for="searchTerm" class="form-label">Search by Name or Note</label>
                     <input type="text" id="searchTerm" class="form-control" placeholder="Search by name or note" @bind="searchTerm">
                 </div>
             </div>
-            <!-- Search Button -->
             <div class="row mt-3">
                 <div class="col-md-12 d-flex justify-content-end">
                     <button class="btn btn-primary" @onclick="ApplySearchFilter">Search</button>
                 </div>
             </div>
         </div>
-
-        <!-- Filters Section -->
         <div class="mb-4">
             <div class="row">
-                <!-- Filter by Type -->
                 <div class="col-md-3">
                     <label for="filterType" class="form-label">Filter by Type</label>
                     <select id="filterType" class="form-select" @bind="filterType">
@@ -35,7 +29,6 @@
                         <option value="expense">Expense</option>
                     </select>
                 </div>
-                <!-- Filter by Tag -->
                 <div class="col-md-3">
                     <label for="filterTag" class="form-label">Filter by Tag</label>
                     <select id="filterTag" class="form-select" @bind="filterTag">
@@ -46,7 +39,6 @@
                         <option value="other">Other</option>
                     </select>
                 </div>
-                <!-- Filter by Date Range -->
                 <div class="col-md-3">
                     <label for="startDate" class="form-label">Start Date</label>
                     <input type="date" id="startDate" class="form-control" @bind="startDate">
@@ -57,17 +49,9 @@
                 </div>
             </div>
             <div class="row mt-3">
-                <!-- Sort by Date -->
-               @*  <div class="col-md-3">
-                    <label for="sortOrder" class="form-label">Sort by Date</label>
-                    <select id="sortOrder" class="form-select" @bind="sortOrder">
-                        <option value="desc">Newest First</option>
-                        <option value="asc">Oldest First</option>
-                    </select>
-                </div> *@
-                <!-- Sort by Amount -->
+             
                 <div class="col-md-3">
-                    <label for="sortOrder" class="form-label">Sort by Amount</label>
+                    <label for="sortOrder" class="form-label">Sort by Date</label>
                     <select id="sortOrder" class="form-select" @bind="sortOrder">
                         <option value="desc"> Newest</option>
                         <option value="asc">Oldest </option>
@@ -75,15 +59,15 @@
                 </div>
 
             </div>
-            <!-- Apply Filters Button -->
             <div class="row mt-3">
                 <div class="col-md-12 d-flex justify-content-end">
                     <button class="btn btn-primary" @onclick="ApplyOtherFilters">Apply Filters</button>
+                    <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+
                 </div>
             </div>
         </div>
 
-        <!-- Transactions Table -->
         <div class="table-responsive">
             @if (filteredTransactions?.Any() ?? false)
             {
@@ -112,7 +96,6 @@
                         }
                     </tbody>
                 </table>
-                <!-- Pagination Controls -->
                 <div class="d-flex justify-content-between mt-3">
                     <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
                     <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
@@ -145,7 +128,6 @@
     {
         try
         {
-            // Fetch all transactions
             transactions = await cashFlowService.LoadCashFlowAsync();
             ApplyOtherFilters(); // Apply the filters and sorting as default
         }
@@ -173,19 +155,16 @@
     {
         filteredTransactions = transactions;
 
-        // Filter by Type
         if (!string.IsNullOrEmpty(filterType))
         {
             filteredTransactions = filteredTransactions.Where(t => t.TransactionType == filterType).ToList();
         }
 
-        // Filter by Tag
         if (!string.IsNullOrEmpty(filterTag))
         {
             filteredTransactions = filteredTransactions.Where(t => t.TransactionTag == filterTag || t.CustomTag == filterTag).ToList();
         }
 
-        // Filter by Date Range
         if (startDate.HasValue)
         {
             filteredTransactions = filteredTransactions.Where(t => t.FlowDate >= startDate.Value).ToList();
@@ -194,7 +173,6 @@
         {
             filteredTransactions = filteredTransactions.Where(t => t.FlowDate <= endDate.Value).ToList();
         }
-        // Sort by date
         if (sortOrder == "desc")
         {
             filteredTransactions = filteredTransactions.OrderByDescending(t => t.FlowDate).ToList();
@@ -204,7 +182,6 @@
             filteredTransactions = filteredTransactions.OrderBy(t => t.FlowDate).ToList();
         }
 
-        // Sort by Date
             // if (sortOrder == "desc")
             // {
             //     filteredTransactions = filteredTransactions.OrderByDescending(t => t.FlowDate).ToList();
@@ -216,7 +193,6 @@
         filteredTransactions = filteredTransactions.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    // Pagination methods
     private bool HasPreviousPage => currentPage > 1;
     private bool HasNextPage => filteredTransactions.Count == pageSize;
     private void PreviousPage()
@@ -236,4 +212,24 @@
             ApplyOtherFilters();
         }
     }
+    private void ClearFilters()
+    {
+        // Reset all filter variables to their default values
+        filterType = "";
+        filterTag = "";
+        startDate = null;
+        endDate = null;
+        searchTerm = "";
+        sortOrder = "desc";
+        currentPage = 1;
+
+        // Reset the filtered transactions to show all transactions
+        filteredTransactions = transactions;
+
+        // Apply default sorting and pagination
+        ApplyOtherFilters();
+    }
+
+   
+
 }

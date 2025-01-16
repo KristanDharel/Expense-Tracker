@@ -12,6 +12,7 @@ namespace ADCourseWork.Services
     {
         Task SaveCashFlowAsync(CashFlow cashflow);
         Task<List<CashFlow>> LoadCashFlowAsync();
+        Task<int> GetTotalInflowAsync();
         //Task<List<CashFlow>> GetCashFlowsAsync();
     }
 }

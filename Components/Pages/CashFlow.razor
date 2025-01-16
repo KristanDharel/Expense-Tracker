@@ -1,84 +1,322 @@
-﻿# ReactWebRtc
-@page "/cashflow"
+﻿@* @page "/cashflow"
 @using ADCourseWork.Models
 @using ADCourseWork.Services
 @inject ICashflows cashFlowService
 @inject NavigationManager navigationManager
-
-<h3 class="text-center mt-4">Cash Flow</h3>
-<div class="container mt-5">
-    <div class="card shadow p-4">
-        <form>
-            <div class="row mb-3">
-                <div class="col">
-                    <label for="transactionName" class="form-label">Transaction Name</label>
-                    <input type="text" @bind="newCashFlow.TransactionName" class="form-control" id="transactionName" placeholder="Enter transaction name">
-                </div>
-                @* <div class="col">
-                    <label for="transactionType" class="form-label">Transaction Type</label>
-                    <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
-                        <option value="income">Income</option>
-                        <option value="expense">Expense</option>
-                    </select>
-                </div> *@
-                <div class="col">
-                    <label for="transactionType" class="form-label">Transaction Type</label>
-                    <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
-                        <option value="" disabled selected>Select transaction type</option>
-                        <option value="income">Income</option>
-                        <option value="expense">Expense</option>
-                    </select>
-                </div>
-
-            </div>
-            <div class="row">
-                @* <div class="col">
-                    <label for="date" class="form-label">Date</label>
-                    <input @bind="newCashFlow.FlowDate" type="date" class="form-control" id="date"> 
-
-                </div> *@
-                <div class="col">
-                    <label for="startDate" class="form-label"> Date</label>
-                    <input type="date" id="startDate" class="form-control" @bind="newCashFlow.FlowDate">
-                </div>
-                <div class="col">
-                    <label for="amount" class="form-label">Amount</label>
-                    <input @bind="newCashFlow.Amount "type=" number" class="form-control" id="amount" placeholder="Enter amount">
-                </div>
-            </div>
-            <div class="row mb-3">
-             
-                <div class="col">
-                    <label for="transactionTag" class="form-label">Transaction Tag</label>
-                    <select @bind="newCashFlow.TransactionTag" class="form-select" id="transactionTag">
-                        <option value="" disabled selected>Select Transaction Tag</option>
-                        <option value="food">Food</option>
-                        <option value="transport">Transport</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="other">Other</option>https://0.0.0.0/transactions
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="customTag" class="form-label">Custom Tag (optional)</label>
-                    <input @bind="newCashFlow.CustomTag" type="text" class="form-control" id="customTag" placeholder="Enter custom tag">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="note" class="form-label">Note</label>
-                <textarea @bind="newCashFlow.Note" class=" form-control" id="note" placeholder="Enter note"></textarea>
-            </div>
-            <button @onclick="AddNewCashFlow" type="submit" class="btn btn-primary w-100">Submit</button>
-        </form>
-    </div>
-</div>
-@if (errorMessage != null)
+@inject AuthentucationStateService authStateService
+@if (!authStateService.IsAuthenticated)
 {
-    <p class="error-message">@errorMessage</p>
+    navigationManager.NavigateTo("/login", true);
+    <p>Redirecting...</p>
 }
-@code {
+else
+{
+    
+    <!-- Cashflow page content -->
+    <h3 class="text-center mt-4">Cash Flow</h3>
+    <div class="container mt-5">
+        <div class="card shadow p-4">
+            <form>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionName" class="form-label">Transaction Name</label>
+                        <input type="text" @bind="newCashFlow.TransactionName" class="form-control" id="transactionName" placeholder="Enter transaction name">
+                    </div>
+
+                    <div class="col">
+                        <label for="transactionType" class="form-label">Transaction Type</label>
+                        <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
+                            <option value="" disabled selected>Select transaction type</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="startDate" class="form-label">Date</label>
+                        <input type="date" id="startDate" class="form-control" @bind="newCashFlow.FlowDate">
+                    </div>
+                    <div class="col">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" @bind="newCashFlow.Amount" class="form-control" id="amount" placeholder="Enter amount">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionTag" class="form-label">Transaction Tag</label>
+                        <select @bind="newCashFlow.TransactionTag" class="form-select" id="transactionTag">
+                            <option value="" disabled selected>Select Transaction Tag</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="customTag" class="form-label">Custom Tag (optional)</label>
+                        <input @bind="newCashFlow.CustomTag" type="text" class="form-control" id="customTag" placeholder="Enter custom tag">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note</label>
+                    <textarea @bind="newCashFlow.Note" class="form-control" id="note" placeholder="Enter note"></textarea>
+                </div>
+                <button @onclick="ValidateAndSubmit" type="button" class="btn btn-primary w-100">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="modal fade show" tabindex="-1" style="display: block;" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Validation Error</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@errorMessage</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @code {
     private ADCourseWork.Models.CashFlow newCashFlow = new ADCourseWork.Models.CashFlow(); // Explicitly use the fully qualified name
 
     private string errorMessage;
+
+    protected override void OnInitialized()
+    {
+        // Set the FlowDate to today's date
+        newCashFlow.FlowDate = DateTime.Today;
+    }
+
+    private async Task ValidateAndSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(newCashFlow.TransactionName))
+        {
+            errorMessage = "Title is required.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(newCashFlow.TransactionType))
+        {
+            errorMessage = "Transaction Type is required.";
+            return;
+        }
+        if (newCashFlow.Amount <= 0)
+        {
+            errorMessage = "Amount should not be empty or less than zero.";
+            return;
+        }
+
+        await AddNewCashFlow();
+    }
+
+    private async Task AddNewCashFlow()
+    {
+        try
+        {
+            // Save the cash flow using the service
+            await cashFlowService.SaveCashFlowAsync(newCashFlow);
+
+            // Reset the form after saving
+            newCashFlow = new ADCourseWork.Models.CashFlow();
+            navigationManager.NavigateTo("/dashboard");
+            errorMessage = null; // Clear any previous error messages
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while adding the cash flow: {ex.Message}";
+        }
+    }
+
+    private void CloseModal()
+    {
+        errorMessage = null;
+    }
+}
+
+}
+
+ *@
+@*  @page "/cashflow"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject ICashflows cashFlowService
+@inject IDebtService debtServices
+@inject NavigationManager navigationManager
+@inject AuthentucationStateService authStateService
+@if (!authStateService.IsAuthenticated)
+{
+    navigationManager.NavigateTo("/login", true);
+    <p>Redirecting...</p>
+}
+else
+{
+
+    <!-- Cashflow page content -->
+    <h3 class="text-center mt-4">Cash Flow</h3>
+    <div class="container mt-5">
+     
+
+        <div class="card shadow p-4">
+            <form>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionName" class="form-label">Transaction Name</label>
+                        <input type="text" @bind="newCashFlow.TransactionName" class="form-control" id="transactionName" placeholder="Enter transaction name">
+                    </div>
+
+                    <div class="col">
+                        <label for="transactionType" class="form-label">Transaction Type</label>
+                        <select @bind="newCashFlow.TransactionType" class="form-select" id="transactionType">
+                            <option value="" disabled selected>Select transaction type</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="startDate" class="form-label">Date</label>
+                        <input type="date" id="startDate" class="form-control" @bind="newCashFlow.FlowDate">
+                    </div>
+                    <div class="col">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number"
+                               @bind="newCashFlow.Amount"
+                               class="form-control @((newCashFlow.Amount <= 0 && !string.IsNullOrWhiteSpace(errorMessage)) ? "is-invalid" : "")"
+                               id="amount"
+                               placeholder="Enter amount">
+
+
+
+
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionTag" class="form-label">Transaction Tag</label>
+                        <select @bind="newCashFlow.TransactionTag" class="form-select" id="transactionTag">
+                            <option value="" disabled selected>Select Transaction Tag</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="customTag" class="form-label">Custom Tag (optional)</label>
+                        <input @bind="newCashFlow.CustomTag" type="text" class="form-control" id="customTag" placeholder="Enter custom tag">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note</label>
+                    <textarea @bind="newCashFlow.Note" class="form-control" id="note" placeholder="Enter note"></textarea>
+                </div>
+                <button @onclick="ValidateAndSubmit" type="button" class="btn btn-primary w-100">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="modal fade show" tabindex="-1" style="display: block;" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Validation Error</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@errorMessage</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @code {
+    private ADCourseWork.Models.CashFlow newCashFlow = new ADCourseWork.Models.CashFlow(); // Explicitly use the fully qualified name
+
+    private string errorMessage;
+    
+    private List<Debt> debtsPending = new();
+    private int totalDebts;
+    private int totalPendingDebts;
+    private int clearedDebts;
+
+    private int totalInflow;
+    private int totalExpense;
+    private int totalTransactions;
+    private int currentBalance;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Set the FlowDate to today's date
+        newCashFlow.FlowDate = DateTime.Today;
+        totalDebts = await debtServices.GetTotalDebtsAsync();
+
+
+        // Load pending debts
+        var pendingDebts = await debtServices.LoadCashDebtAsync();
+        debtsPending = pendingDebts
+       .Where(d => string.Equals(d.DebtStatus?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase))
+       .ToList();
+        totalPendingDebts = debtsPending.Sum(d => d.Amount);
+        // Calculate cleared debts AFTER totalPendingDebts is computed
+        clearedDebts = totalDebts - totalPendingDebts;
+        var allCashFlows = await cashFlowService.LoadCashFlowAsync();
+        totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
+        totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
+        totalTransactions = totalInflow + totalDebts - totalExpense;
+        currentBalance = ((totalInflow - totalExpense) + totalPendingDebts) - clearedDebts;
+    }
+
+    private async Task ValidateAndSubmit()
+    {
+        // Check for empty or missing title
+        if (string.IsNullOrWhiteSpace(newCashFlow.TransactionName))
+        {
+            errorMessage = "Title is required.";
+            return;
+        }
+
+        // Check for missing transaction type
+        if (string.IsNullOrWhiteSpace(newCashFlow.TransactionType))
+        {
+            errorMessage = "Transaction Type is required.";
+            return;
+        }
+
+        // Ensure that the amount is a positive number and handle input errors
+        if (newCashFlow.Amount <= 0)
+        {
+            errorMessage = "Amount should be greater than zero or less than current balance.";
+            return;
+        }
+
+        // Ensure that the expense does not exceed the current balance
+        if (newCashFlow.TransactionType == "expense" && newCashFlow.Amount > currentBalance)
+        {
+            errorMessage = "Expense amount exceeds the current balance.";
+            return;
+        }
+
+        // If validation is successful, proceed to add the new cash flow
+        await AddNewCashFlow();
+    }
+
 
 
     private async Task AddNewCashFlow()
@@ -96,8 +334,308 @@
         catch (Exception ex)
         {
             errorMessage = $"An error occurred while adding the cash flow: {ex.Message}";
-            Console.WriteLine(errorMessage); // Log for debugging
         }
     }
 
+    private void CloseModal()
+    {
+        errorMessage = null;
+    }
+}
+
+}
+
+ *@
+ @page "/cashflow"
+@using ADCourseWork.Models
+@using ADCourseWork.Services
+@inject ICashflows cashFlowService
+@inject IDebtService debtServices
+@inject NavigationManager navigationManager
+@inject AuthentucationStateService authStateService
+
+@if (!authStateService.IsAuthenticated)
+{
+    navigationManager.NavigateTo("/login", true);
+    <p>Redirecting...</p>
+}
+else
+{
+    <h3 class="text-center mt-4">Cash Flow</h3>
+    <div class="container mt-5">
+        @* <div class="row mb-4">
+            <div class="col text-center">
+                <h4>Current Balance: @currentBalance.ToString("C")</h4>
+            </div>
+        </div> *@
+
+        <div class="card shadow p-4">
+            <form>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionName" class="form-label">Transaction Name</label>
+                        <input type="text"
+                               @bind="newCashFlow.TransactionName"
+                               class="form-control @(titleError ? "is-invalid" : "")"
+                               id="transactionName"
+                               placeholder="Enter transaction name">
+                        @if (titleError)
+                        {
+                            <div class="invalid-feedback">
+                                Transaction name is required.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col">
+                        <label for="transactionType" class="form-label">Transaction Type</label>
+                        <select @bind="newCashFlow.TransactionType"
+                                class="form-select @(typeError ? "is-invalid" : "")"
+                                id="transactionType">
+                            <option value="" disabled selected>Select transaction type</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                        @if (typeError)
+                        {
+                            <div class="invalid-feedback">
+                                Transaction type is required.
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="startDate" class="form-label">Date</label>
+                        <input type="date"
+                               id="startDate"
+                               class="form-control"
+                               @bind="newCashFlow.FlowDate">
+                    </div>
+                    <div class="col">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number"
+                               @bind="tempAmount"
+                               @bind:event="oninput"
+                               class="form-control @(amountError ? "is-invalid" : "")"
+                               id="amount"
+                               placeholder="Enter amount">
+                        @if (amountError)
+                        {
+                            <div class="invalid-feedback">
+                                @errorMessage
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="transactionTag" class="form-label">Transaction Tag</label>
+                        <select @bind="newCashFlow.TransactionTag"
+                                class="form-select @(tagError ? "is-invalid" : "")"
+                                id="transactionTag">
+                            <option value="" disabled selected>Select Transaction Tag</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="bills">Bills</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="other">Other</option>
+                        </select>
+                        @if (tagError)
+                        {
+                            <div class="invalid-feedback">
+                                Transaction tag is required.
+                            </div>
+                        }
+                    </div>
+                    <div class="col">
+                        <label for="customTag" class="form-label">Custom Tag (optional)</label>
+                        <input @bind="newCashFlow.CustomTag"
+                               type="text"
+                               class="form-control"
+                               id="customTag"
+                               placeholder="Enter custom tag">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note (optional)</label>
+                    <textarea @bind="newCashFlow.Note"
+                              class="form-control"
+                              id="note"
+                              rows="3"
+                              placeholder="Enter note"></textarea>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button @onclick="ValidateAndSubmit"
+                            type="button"
+                            class="btn btn-primary">
+                        Submit Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage) && !amountError && !titleError && !typeError && !tagError)
+    {
+        <div class="modal fade show" tabindex="-1" style="display: block;" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>@errorMessage</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @code {
+    private ADCourseWork.Models.CashFlow newCashFlow = new();
+    private string errorMessage;
+    private decimal tempAmount;
+
+    // Validation flags
+    private bool amountError;
+    private bool titleError;
+    private bool typeError;
+    private bool tagError;
+
+    // Financial tracking
+    private List<Debt> debtsPending = new();
+    private int totalDebts;
+    private int totalPendingDebts;
+    private int clearedDebts;
+    private int totalInflow;
+    private int totalExpense;
+    private int totalTransactions;
+    private int currentBalance;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with today's date
+        newCashFlow.FlowDate = DateTime.Today;
+
+        // Set the current user
+        // newCashFlow.UserId = authStateService.UserId;
+
+        await LoadFinancialData();
+    }
+
+    private async Task LoadFinancialData()
+    {
+        try
+        {
+            // Load and calculate debts
+            totalDebts = await debtServices.GetTotalDebtsAsync();
+            var pendingDebts = await debtServices.LoadCashDebtAsync();
+            debtsPending = pendingDebts
+                .Where(d => string.Equals(d.DebtStatus?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            totalPendingDebts = debtsPending.Sum(d => d.Amount);
+            clearedDebts = totalDebts - totalPendingDebts;
+
+            // Load and calculate cash flows
+            var allCashFlows = await cashFlowService.LoadCashFlowAsync();
+            totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
+            totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
+
+            // Calculate totals
+            totalTransactions = totalInflow + totalDebts - totalExpense;
+            currentBalance = ((totalInflow - totalExpense) + totalPendingDebts) - clearedDebts;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading financial data. Please try refreshing the page.";
+            Console.WriteLine($"Error loading financial data: {ex.Message}");
+        }
+    }
+
+    private void ResetValidation()
+    {
+        errorMessage = null;
+        amountError = false;
+        titleError = false;
+        typeError = false;
+        tagError = false;
+    }
+
+    private bool ValidateAmount()
+    {
+        if (tempAmount <= 0)
+        {
+            errorMessage = "Amount must be greater than zero.";
+            amountError = true;
+            return false;
+        }
+
+        if (newCashFlow.TransactionType == "expense" && tempAmount > currentBalance)
+        {
+            errorMessage = $"Expense amount exceeds current balance of {currentBalance:C}";
+            amountError = true;
+            return false;
+        }
+
+        newCashFlow.Amount = (int)tempAmount;
+        return true;
+    }
+
+    private async Task ValidateAndSubmit()
+    {
+        ResetValidation();
+
+        // Validate required fields
+        titleError = string.IsNullOrWhiteSpace(newCashFlow.TransactionName);
+        typeError = string.IsNullOrWhiteSpace(newCashFlow.TransactionType);
+        tagError = string.IsNullOrWhiteSpace(newCashFlow.TransactionTag);
+
+        // Check if any validation failed
+        if (titleError || typeError || tagError || !ValidateAmount())
+        {
+            return;
+        }
+
+        await AddNewCashFlow();
+    }
+
+    private async Task AddNewCashFlow()
+    {
+        try
+        {
+            await cashFlowService.SaveCashFlowAsync(newCashFlow);
+
+            // Reset form
+            newCashFlow = new ADCourseWork.Models.CashFlow
+                {
+                    FlowDate = DateTime.Today,
+                    // UserId = authStateService.UserId
+                };
+            tempAmount = 0;
+
+            // Redirect to dashboard
+            navigationManager.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to save transaction. Please try again.";
+            Console.WriteLine($"Error saving cash flow: {ex.Message}");
+        }
+    }
+
+    private void CloseModal()
+    {
+        errorMessage = null;
+    }
+    }
 }

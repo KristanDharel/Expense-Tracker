@@ -15,17 +15,17 @@
                 </div>
                 <div class="col">
                     <label for="amount" class="form-label">Amount</label>
-                    <input type="number" @bind="newDebt.Amount" class="form-control" id="amount" placeholder="Enter amount">
+                    <input type="number" @bind="newDebt.Amount" class="form-control" id="amount" placeholder="Enter amount" required>
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col">
                     <label for="transactionDate" class="form-label">Date of Transaction</label>
-                    <input type="date" @bind="newDebt.TransactionDate" class="form-control" id="transactionDate">
+                    <input type="date" @bind="newDebt.TransactionDate" class="form-control" id="transactionDate" />
                 </div>
                 <div class="col">
                     <label for="dueDate" class="form-label">Due Date</label>
-                    <input type="date" @bind="newDebt.DueDate" class="form-control" id="dueDate">
+                    <input type="date" @bind="newDebt.DueDate" class="form-control" id="dueDate" min="@newDebt.TransactionDate.ToString("yyyy-MM-dd")" />
                 </div>
             </div>
             <div class="row mb-3">
@@ -33,7 +33,6 @@
                     <label for="transactionTag" class="form-label">Transaction Tag</label>
                     <select @bind="newDebt.DebtTransactionTag" class="form-select" id="transactionTag">
                         <option value="" disabled selected>Select Transaction Tag </option>
-
                         <option value="personal">Personal</option>
                         <option value="business">Business</option>
                         <option value="loan">Loan</option>
@@ -45,52 +44,106 @@
                     <input type="text" @bind="newDebt.DebtCustomTag" class="form-control" id="customTags" placeholder="Enter custom tags">
                 </div>
             </div>
-          @*   <div class="col">
-                <label for="debtStatus" class="form-label">Debt Status</label>
-                <select @bind="newDebt.DebtStatus" class="form-select" id="debtStatus">
-                    <option value="" disabled selected>Select Debt Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="cleared">Cleared</option>
-                </select>
-            </div> *@
             <div class="mb-3">
                 <label for="note" class="form-label">Note</label>
                 <textarea @bind="newDebt.DebtNote" class="form-control" id="note" placeholder="Enter note"></textarea>
             </div>
-            <button @onclick="AddNewDebt" type="submit" class="btn btn-primary w-100">Submit</button>
+            <button @onclick="ValidateAndSubmit" type="button" class="btn btn-primary w-100">Submit</button>
         </form>
     </div>
 </div>
-@if (errorMessage != null)
+
+<!-- Error Popup Modal -->
+@if (showErrorPopup)
 {
-    <p class="error-message">@errorMessage</p>
+    <div class="modal fade show" tabindex="-1" style="display: block;" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Validation Error</h5>
+                    <button type="button" class="btn-close" @onclick="ClosePopup" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@errorMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="ClosePopup">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
     private ADCourseWork.Models.Debt newDebt = new ADCourseWork.Models.Debt
-    {
-            DebtStatus = "pending" // Default status is "pending"
-    }; // Explic
+        {
+            DebtStatus = "pending",
+            TransactionDate = DateTime.Today,
+            DueDate = DateTime.Today
+        };
+
     private string errorMessage;
+    private bool showErrorPopup = false;
+
+    private async Task ValidateAndSubmit()
+    {
+        errorMessage = null;
+
+        // Validation
+        if (string.IsNullOrWhiteSpace(newDebt.Title))
+        {
+            errorMessage = "Title is required.";
+            ShowPopup();
+            return;
+        }
+
+        if (newDebt.Amount <= 0)
+        {
+            errorMessage = "Amount is required and must be greater than 0.";
+            ShowPopup();
+            return;
+        }
+
+        if (newDebt.DueDate < newDebt.TransactionDate)
+        {
+            errorMessage = "Due date cannot be earlier than the transaction date.";
+            ShowPopup();
+            return;
+        }
+
+        await AddNewDebt();
+    }
 
     private async Task AddNewDebt()
     {
         try
         {
-            // Save the debt using the service
             await debtServices.SaveDebtFlowAsync(newDebt);
 
-
-
             // Reset the form after saving
-            newDebt = new Debt();
+            newDebt = new ADCourseWork.Models.Debt
+                {
+                    DebtStatus = "pending",
+                    TransactionDate = DateTime.Today,
+                    DueDate = DateTime.Today
+                };
+
             navigationManager.NavigateTo("/dashboard");
-            errorMessage = null; // Clear any previous error messages
         }
         catch (Exception ex)
         {
             errorMessage = $"An error occurred while adding the debt: {ex.Message}";
-            Console.WriteLine(errorMessage); // Log for debugging
+            ShowPopup();
         }
+    }
+
+    private void ShowPopup()
+    {
+        showErrorPopup = true;
+    }
+
+    private void ClosePopup()
+    {
+        showErrorPopup = false;
     }
 }

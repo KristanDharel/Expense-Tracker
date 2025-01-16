@@ -13,10 +13,27 @@ namespace ADCourseWork.Services
        
         private readonly List<CashFlow> cashFlows = new();
 
+        public async Task<int> GetTotalInflowAsync()
+        {
+            try
+            {
+                // Load all cash flows
+                var cashFlows = await LoadCashFlowAsync();
 
-        
+                // Calculate total inflow
+                return cashFlows
+                    .Where(c => c.TransactionType.Equals("inflow", StringComparison.OrdinalIgnoreCase))
+                    .Sum(c => c.Amount);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating total inflow: {ex.Message}");
+                throw;
+            }
+        }
 
-       
+
+
         public async Task SaveCashFlowAsync(CashFlow cashflow)
         {
             try

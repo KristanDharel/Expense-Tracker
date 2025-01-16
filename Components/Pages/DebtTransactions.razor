@@ -1,189 +1,26 @@
-﻿@* @page "/debtTransactions"
+﻿@page "/debtTransactions"
 @using ADCourseWork.Models
 @using ADCourseWork.Services
 @inject IDebtService debtService
+@inject ICashflows cashFlowService
 
 <h3 class="text-center mt-4">Debt Transactions</h3>
 <div class="container mt-5">
     <div class="card shadow p-4">
-        <!-- Search Section -->
-        <div class="mb-4">
-            <div class="row">
-                <!-- Search -->
-                <div class="col-md-12">
-                    <label for="searchTerm" class="form-label">Search by Title or Note</label>
-                    <input type="text" id="searchTerm" class="form-control" placeholder="Search by title or note" @bind="searchTerm">
-                </div>
+        <!-- Error Popup -->
+        @if (ShowErrorPopup)
+        {
+            <div class="alert alert-danger">
+                @ErrorMessage
             </div>
-            <!-- Search Button -->
-            <div class="row mt-3">
-                <div class="col-md-12 d-flex justify-content-end">
-                    <button class="btn btn-primary" @onclick="ApplySearchFilter">Search</button>
-                </div>
-            </div>
+        }
+
+        <!-- Clear Debts Section -->
+        <div class="mb-4 p-3 border rounded shadow-sm bg-light">
+            <p class="text-primary fs-5">Remaining: <span class="fw-bold">Rs. @RemainingInflow</span></p>
         </div>
 
-        <!-- Filters Section -->
-        <div class="mb-4">
-            <div class="row">
-                <!-- Filter by Tag -->
-                <div class="col-md-3">
-                    <label for="filterTag" class="form-label">Filter by Tag</label>
-                    <select id="filterTag" class="form-select" @bind="filterTag">
-                        <option value="">All</option>
-                        <option value="food">Food</option>
-                        <option value="transport">Transport</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <!-- Filter by Date Range -->
-                <div class="col-md-3">
-                    <label for="startDate" class="form-label">Start Date</label>
-                    <input type="date" id="startDate" class="form-control" @bind="startDate">
-                </div>
-                <div class="col-md-3">
-                    <label for="endDate" class="form-label">End Date</label>
-                    <input type="date" id="endDate" class="form-control" @bind="endDate">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <!-- Sort by Date -->
-                <div class="col-md-3">
-                    <label for="sortOrder" class="form-label">Sort by Date</label>
-                    <select id="sortOrder" class="form-select" @bind="sortOrder">
-                        <option value="desc">Newest First</option>
-                        <option value="asc">Oldest First</option>
-                    </select>
-                </div>
-            </div>
-            <!-- Apply Filters Button -->
-            <div class="row mt-3">
-                <div class="col-md-12 d-flex justify-content-end">
-                    <button class="btn btn-primary" @onclick="ApplyOtherFilters">Apply Filters</button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Debt Transactions Table -->
-        <div class="table-responsive">
-            @if (filteredDebtTransactions?.Any() ?? false)
-            {
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Due Date</th>
-                            <th>Status</th>
-                            <th>Tag</th>
-                            <th>Note</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var debt in filteredDebtTransactions)
-                        {
-                            <tr>
-                                <td>@(string.IsNullOrEmpty(debt.Title) ? "N/A" : debt.Title)</td>
-                                <td>Rs. @(debt.Amount)</td>
-                                <td>@debt.TransactionDate.ToShortDateString()</td>
-                                <td>@debt.DueDate.ToShortDateString()</td>
-                                <td>@debt.DebtStatus</td>
-                                <td>@(string.IsNullOrWhiteSpace(debt.DebtTransactionTag) ? debt.DebtCustomTag : debt.DebtTransactionTag)</td>
-                                <td>@(string.IsNullOrEmpty(debt.DebtNote) ? "N/A" : debt.DebtNote)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <div class="alert alert-warning text-center">
-                    No debt transactions available.
-                </div>
-            }
-        </div>
-    </div>
-</div>
-
-@code {
-    private List<Debt> debts = new();
-    private List<Debt> filteredDebtTransactions = new();
-
-    private string filterTag = "";
-    private DateTime? startDate = null;
-    private DateTime? endDate = null;
-    private string searchTerm = "";
-    private string sortOrder = "desc";
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            // Fetch all debt transactions
-            debts = await debtService.LoadCashDebtAsync();
-            ApplyOtherFilters(); // Apply the filters and sorting as default
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading debt transactions: {ex.Message}");
-        }
-    }
-
-    private void ApplySearchFilter()
-    {
-        filteredDebtTransactions = debts;
-
-        // Search by Title or Note, ensuring that neither are null before calling Contains
-        if (!string.IsNullOrEmpty(searchTerm))
-        {
-            filteredDebtTransactions = filteredDebtTransactions.Where(d =>
-                (d.Title != null && d.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
-                (d.DebtNote != null && d.DebtNote.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
-        }
-    }
-
-    private void ApplyOtherFilters()
-    {
-        filteredDebtTransactions = debts;
-
-        // Filter by Tag
-        if (!string.IsNullOrEmpty(filterTag))
-        {
-            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.DebtTransactionTag == filterTag || d.DebtCustomTag == filterTag).ToList();
-        }
-
-        // Filter by Date Range
-        if (startDate.HasValue)
-        {
-            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.TransactionDate >= startDate.Value).ToList();
-        }
-        if (endDate.HasValue)
-        {
-            filteredDebtTransactions = filteredDebtTransactions.Where(d => d.TransactionDate <= endDate.Value).ToList();
-        }
-
-        // Sort by Date
-        if (sortOrder == "desc")
-        {
-            filteredDebtTransactions = filteredDebtTransactions.OrderByDescending(d => d.TransactionDate).ToList();
-        }
-        else
-        {
-            filteredDebtTransactions = filteredDebtTransactions.OrderBy(d => d.TransactionDate).ToList();
-        }
-    }
-}
- *@
-@page "/debtTransactions"
-@using ADCourseWork.Models
-@using ADCourseWork.Services
-@inject IDebtService debtService
-
-<h3 class="text-center mt-4">Debt Transactions</h3>
-<div class="container mt-5">
-    <div class="card shadow p-4">
         <!-- Search Section -->
         <div class="mb-4">
             <div class="row">
@@ -200,6 +37,7 @@
         </div>
 
         <!-- Filters Section -->
+
         <div class="mb-4">
             <div class="row">
                 <div class="col-md-3">
@@ -212,6 +50,7 @@
                         <option value="other">Other</option>
                     </select>
                 </div>
+               
                 <div class="col-md-3">
                     <label for="startDate" class="form-label">Start Date</label>
                     <input type="date" id="startDate" class="form-control" @bind="startDate">
@@ -233,10 +72,11 @@
             <div class="row mt-3">
                 <div class="col-md-12 d-flex justify-content-end">
                     <button class="btn btn-primary" @onclick="ApplyFilters">Apply Filters</button>
+                    <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+					
                 </div>
             </div>
         </div>
-
         <!-- Debt Transactions Table -->
         <div class="table-responsive">
             @if (filteredDebtTransactions?.Any() ?? false)
@@ -290,8 +130,12 @@
 </div>
 
 @code {
+    private bool ShowErrorPopup = false;
+    private string ErrorMessage = "";
     private List<Debt> debts = new();
     private List<Debt> filteredDebtTransactions = new();
+    private int totalInflow;
+    private decimal RemainingInflow => totalInflow - debts.Where(d => d.DebtStatus == "cleared").Sum(d => d.Amount);
 
     private string filterTag = "";
     private DateTime? startDate = null;
@@ -299,27 +143,67 @@
     private string searchTerm = "";
     private string sortOrder = "desc";
     private int currentPage = 1;
-    private int pageSize = 5; // Change this value based on the desired page size
+    private int pageSize = 5;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Fetch total inflow
+            var allCashFlows = await cashFlowService.LoadCashFlowAsync();
+            totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
+
             // Fetch all debt transactions
             debts = await debtService.LoadCashDebtAsync();
-            ApplyFilters(); // Apply the filters and sorting as default
+            ApplyFilters();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading debt transactions: {ex.Message}");
+            Console.WriteLine($"Error loading data: {ex.Message}");
         }
     }
+
+    private async Task ToggleStatus(Debt debt)
+    {
+        try
+        {
+            decimal inflowRemaining = RemainingInflow; // Get remaining inflow
+
+            if (debt.DebtStatus == "pending")
+            {
+                if (debt.Amount > inflowRemaining)
+                {
+                    // Show error if debt amount exceeds the remaining inflow
+                    ShowErrorPopup = true;
+                    ErrorMessage = $"Debt '{debt.Title}' amount exceeds remaining inflow!";
+                    return; // Stop if the debt cannot be cleared
+                }
+
+                // Mark debt as cleared
+                debt.DebtStatus = "cleared";
+                inflowRemaining -= debt.Amount;
+                await debtService.UpdateDebtStatusAsync(debt);
+            }
+            else
+            {
+                // If already cleared, mark it as pending
+                debt.DebtStatus = "pending";
+                await debtService.UpdateDebtStatusAsync(debt);
+            }
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating debt status: {ex.Message}");
+        }
+    }
+   
 
     private void ApplySearchFilter()
     {
         ApplyFilters();
     }
-
     private void ApplyFilters()
     {
         filteredDebtTransactions = debts;
@@ -357,23 +241,6 @@
         filteredDebtTransactions = filteredDebtTransactions.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    private async Task ToggleStatus(Debt debt)
-    {
-        try
-        {
-            // Toggle the status between 'pending' and 'cleared'
-            debt.DebtStatus = debt.DebtStatus == "pending" ? "cleared" : "pending";
-
-            // Update the status in the database (JSON file)
-            await debtService.UpdateDebtStatusAsync(debt);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error updating debt status: {ex.Message}");
-        }
-    }
-
-    // Pagination methods
     private bool HasPreviousPage => currentPage > 1;
     private bool HasNextPage => filteredDebtTransactions.Count == pageSize;
 
@@ -394,4 +261,21 @@
             ApplyFilters();
         }
     }
+    private void ClearFilters()
+    {
+        // Reset filter variables
+        filterTag = "";
+        startDate = null;
+        endDate = null;
+        searchTerm = "";
+        sortOrder = "desc";
+        currentPage = 1;
+
+        // Reload the original debt transactions
+        filteredDebtTransactions = debts;
+
+        // Apply default sorting and pagination
+        ApplyFilters();
+    }
+
 }

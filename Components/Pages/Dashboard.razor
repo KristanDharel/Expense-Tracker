@@ -5,216 +5,301 @@
  @inject ICashflows cashFlowService
 
  @inject NavigationManager navigationManager
+ @inject AuthentucationStateService authStateService
+@if (!authStateService.IsAuthenticated)
+{
+    navigationManager.NavigateTo("/login", true);
+    <p>Redirecting...</p>
+}
+else
+{
+    <h3>Welcome, @authStateService.CurrentUser.UserName!</h3>
+    <p>Your selected currency is: @authStateService.CurrentUser.Currency</p>
+  
+    <div class="container">
+        <!-- Top Metrics -->
+        <div class="row text-center mb-4">
+            <!-- First Card -->
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <h5>Current Balance</h5>
+                            <h3>@currentBalance</h3>
+                        </div>
+                        <!-- Image on the right -->
+                        <img src="currentBalance.png" alt="Track Expenses" class="ms-4" style="width: 60px; height: 60px;" />
+                    </div>
+                </div>
+            </div>
 
-<h3 class="text-center my-4">Dashboard</h3>
+            <!-- Second Card -->
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <h5>Inflow</h5>
+                            <h3>@totalInflow</h3>
+                        </div>
+                        <!-- Image on the right -->
+                        <img src="inflow.png" alt="Inflow" class="ms-4" style="width: 60px; height: 60px;" />
+                    </div>
+                </div>
+            </div>
 
-<div class="container">
-    <!-- Top Metrics -->
-    <div class="row text-center mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Current Balance</h5>
-                    <h3>2000</h3>
+            <!-- Third Card -->
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <h5>Outflow</h5>
+                            <h3>@totalExpense</h3>
+                        </div>
+                        <!-- Image on the right -->
+                        <img src="outflow.png" alt="Outflow" class="ms-4" style="width: 60px; height: 60px;" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Inflow</h5>
-                    <h3>@totalInflow</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5>Outflow</h5>
-                    <h3>@totalExpense</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5>Total Debts</h5>
-                    <h3>@totalDebts</h3>
+
+            <!-- Fourth Card -->
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <h5>Total Debts</h5>
+                            <h3>@totalDebts</h3>
+                        </div>
+                        <!-- Image on the right -->
+                        <img src="debt.png" alt="Total Debts" class="ms-4" style="width: 60px; height: 60px;" />
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-   
-    <div class = "d-flex"> 
-    <div class="col mb-6 ">
-        <!-- Transactions Table with Toggle Button -->
-            <div class="row mb-4 ms-10">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>Top 5 Transactions</span>
-                        <button class="btn btn-sm btn-primary" @onclick="ToggleView">
-                            Switch to @viewToggleText View
-                        </button>
+
+
+        <div class="d-flex">
+            <div class="col mb-6 ">
+                <!-- Transactions Table with Toggle Button -->
+                <div class="row mb-4 ms-10">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Top 5 Transactions</span>
+                                <button class="btn btn-sm btn-primary" @onclick="ToggleView">
+                                    Switch to @viewToggleText View
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Amount</th>
+                                            <th>Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var transaction in currentTransactions)
+                                        {
+                                            <tr>
+                                                <td>Rs.@transaction.Amount</td>
+                                                <td>@transaction.Type</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="table-responsive">
+                </div>
+                @* //default mai false, model ma debt clear thapne *@
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Financial Overview</h5>
+                        <MudItem xs="12" sm="6" md="6">
+                            <MudPaper Elevation="2" Class="pa-4 d-flex align-center justify-center" Style="height: 300px; width: 100%; z-index: 1000; position: relative;">
+                                <MudChart ChartType="ChartType.Pie"
+                                          Width="100%"
+                                          Height="200px"
+                                          InputData="@chartData.ToArray()"
+                                          InputLabels="@chartLabels.ToArray()"
+                                          ChartOptions="@options" />
+                            </MudPaper>
+                        </MudItem>
+                    </div>
+                </div>
+            </div>
+        </div>
+   
+
+    <!-- Additional Metrics -->
+    <div class="row text-center mb-4">
+        <!-- Highest Inflow Card -->
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Highest Inflow</h5>
+                        <h3>@highestInflow</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="hinflow.png" alt="Highest Inflow" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Highest Outflow Card -->
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Highest Outflow</h5>
+                        <h3>@highestOutflow</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="hout.png" alt="Highest Outflow" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Highest Debt Card -->
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Highest Debt</h5>
+                        <h3>@highestDebt</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="hdebt.png" alt="Highest Debt" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Total No of Transactions Card -->
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5> No of Transactions</h5>
+                        <h3>@totalNoTransaction</h3>
+                    </div>
+                    <!-- Image on the right -->
+                      <img src="notrans.png" alt="Total Transactions" class="ms-4" style="width: 50px; height: 40px;" /> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Debt Summary -->
+    <div class="row text-center mb-4">
+        <!-- Cleared Debts Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Cleared Debts</h5>
+                        <h3>@clearedDebts</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="clear.png" alt="Cleared Debts" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Debts Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Pending Debts</h5>
+                        <h3>@totalPendingDebts</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="pending.png" alt="Pending Debts" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Transactions Card -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div class="text-center">
+                        <h5>Total Transactions</h5>
+                        <h3>@totalTransactions</h3>
+                    </div>
+                    <!-- Image on the right -->
+                    <img src="noTransaction.png" alt="Total Transactions" class="ms-4" style="width: 60px; height: 60px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    @* </div> *@
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Pending Debts</span>
+                    <div class="d-flex">
+                        <input type="date" class="form-control form-control-sm me-2" @bind="startDate" />
+                        <input type="date" class="form-control form-control-sm me-2" @bind="endDate" />
+                        <button class="btn btn-sm btn-primary" @onclick="FilterDebts">Filter</button>
+                        <button class="btn btn-sm btn-secondary ms-2" @onclick="ClearFilter">Clear</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    @if (filteredDebts.Any())
+                    {
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th>Debt Source</th>
+                                    <th>Transaction Date</th>
+                                    <th>Due Date</th>
                                     <th>Amount</th>
-                                    <th>Type</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var transaction in currentTransactions)
+                                @foreach (var debt in filteredDebts)
                                 {
                                     <tr>
-                                        <td>Rs.@transaction.Amount</td>
-                                        <td>@transaction.Type</td>
+                                        <td>@debt.Title</td>
+                                        <td>@debt.TransactionDate.ToShortDateString()</td>
+                                        <td>@debt.DueDate.ToShortDateString()</td>
+                                        <td>Rs.@debt.Amount</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @* //default mai false, model ma debt clear thapne *@
-     </div> 
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Chart Placeholder</h5>
-                    <!-- Add your chart implementation here -->
-                    <div style="height: 200px; background-color: #f8f9fa;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-    <!-- Additional Metrics -->
-    <div class="row text-center mb-4">
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Highest Inflow</h5>
-                    <h3>@highestInflow</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5>Highest Outflow</h5>
-                    <h3>@highestOutflow</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5>Highest Debt</h5>
-                    <h3>@highestDebt</h3>
-                </div>
-            </div>
-        </div>
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5>Total No of Transactions</h5>
-                <h3>@totalNoTransaction</h3>
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Debt Summary -->
-    <div class="row text-center mb-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Cleared Debts</h5>
-                    <h3>5000</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Pending Debts</h5>
-                <h3>@totalPendingDebts</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Total Transactions</h5>
-                <h3>@totalTransactions</h3>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning m-3" role="alert">
+                            No pending debts available for the selected date range.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 
-   
-
-
-@* </div> *@
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Pending Debts</span>
-                <div class="d-flex">
-                    <input type="date" class="form-control form-control-sm me-2" @bind="startDate" />
-                    <input type="date" class="form-control form-control-sm me-2" @bind="endDate" />
-                    <button class="btn btn-sm btn-primary" @onclick="FilterDebts">Filter</button>
-                    <button class="btn btn-sm btn-secondary ms-2" @onclick="ClearFilter">Clear</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                @if (filteredDebts.Any())
-                {
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Debt Source</th>
-                                <th>Transaction Date</th>
-                                <th>Due Date</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var debt in filteredDebts)
-                            {
-                                <tr>
-                                    <td>@debt.Title</td>
-                                    <td>@debt.TransactionDate.ToShortDateString()</td>
-                                    <td>@debt.DueDate.ToShortDateString()</td>
-                                    <td>Rs.@debt.Amount</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <div class="alert alert-warning m-3" role="alert">
-                        No pending debts available for the selected date range.
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-@code {
+    @code {
     private int totalDebts;
     private List<Debt> pendingDebts = new();
     private List<Debt> debtsPending = new();
     private DateTime? startDate;
     private DateTime? endDate;
+
+    private int clearedDebts;
+    private int currentBalance;
     private List<Debt> filteredDebts = new();
     private int totalInflow;
     private int totalExpense;
@@ -231,6 +316,12 @@
     private int totalNoTransaction;
 
 
+    private List<double> chartData = new();
+    private List<string> chartLabels = new();
+    private ChartOptions options = new()
+        {
+            ChartPalette = new[] { "#4CAF50", "#FFC107", "#F44336" } // Green for inflows, Yellow for outflows, Red for debts
+        };
 
 
     protected override async Task OnInitializedAsync()
@@ -239,13 +330,14 @@
         {
             await LoadDashboardDataAsync();
             filteredDebts = debtsPending;
+            PrepareChartData();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading dashboard data: {ex.Message}");
         }
     }
-    
+
     private void FilterDebts()
     {
         // Apply date range filter
@@ -274,15 +366,20 @@
         // Fetch total debts
         totalDebts = await debtServices.GetTotalDebtsAsync();
 
+
         // Load pending debts
         var pendingDebts = await debtServices.LoadCashDebtAsync();
-        debtsPending = pendingDebts.Where(d => string.Equals(d.DebtStatus?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase)).ToList();
+        debtsPending = pendingDebts
+       .Where(d => string.Equals(d.DebtStatus?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase))
+       .ToList();
         totalPendingDebts = debtsPending.Sum(d => d.Amount);
-
+        // Calculate cleared debts AFTER totalPendingDebts is computed
+        clearedDebts = totalDebts - totalPendingDebts;
         var allCashFlows = await cashFlowService.LoadCashFlowAsync();
         totalInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Sum(cf => cf.Amount);
         totalExpense = allCashFlows.Where(cf => cf.TransactionType == "expense").Sum(cf => cf.Amount);
         totalTransactions = totalInflow + totalDebts - totalExpense;
+        currentBalance = ((totalInflow - totalExpense)+totalPendingDebts) - clearedDebts;
         // count total no of transactions
         int inflowCount = allCashFlows.Count(cf => cf.TransactionType == "income");
         int outflowCount = allCashFlows.Count(cf => cf.TransactionType == "expense");
@@ -293,8 +390,8 @@
         highestInflow = allCashFlows.Where(cf => cf.TransactionType == "income").Max(cf => cf.Amount);
         highestOutflow = allCashFlows.Where(cf => cf.TransactionType == "expense").Max(cf => cf.Amount);
         highestDebt = pendingDebts.Any() ? pendingDebts.Max(d => d.Amount) : 0;
-    // Combine and get top 5 transactions by amount
-    var transactions = new List<Transaction>();
+        // Combine and get top 5 transactions by amount
+        var transactions = new List<Transaction>();
 
         transactions.AddRange(allCashFlows.Where(cf => cf.TransactionType == "income")
             .OrderByDescending(cf => cf.Amount)
@@ -318,8 +415,20 @@
 
         // Set the currentTransactions to the top highest initially
         currentTransactions = topHighestTransactions;
-    
-}
+
+    }
+    private void PrepareChartData()
+    {
+        chartData = new List<double>
+        {
+            totalInflow,
+            totalExpense,
+            totalDebts
+        };
+
+        chartLabels = new List<string> { "Inflows", "Outflows", "Debts" };
+    }
+
     private void ToggleView()
     {
         // Toggle between highest and lowest view
@@ -347,4 +456,8 @@
             Console.WriteLine($"Error refreshing dashboard data: {ex.Message}");
         }
     }
- }
+}
+
+}
+
+

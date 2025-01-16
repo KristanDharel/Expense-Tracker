@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@using ADCourseWork.Services
+@inject NavigationManager NavigationManager
+ @inject AuthentucationStateService authStateService
 
  <MudThemeProvider />
  <MudPopoverProvider />
@@ -12,6 +15,13 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
+        @if (ShouldDisplayBalance())
+        {
+            <MudText Typo="Typo.body1" Class="me-3">
+                Current Balance: @authStateService.CurrentUser.Currency @currentBalance
+            </MudText>
+        }
+
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
@@ -23,9 +33,40 @@
 </MudLayout>
 @code {
     bool _drawerOpen = true;
+    private int currentBalance;
+    [Inject] private ICashflows CashFlowService { get; set; }
+    [Inject] private IDebtService DebtServices { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentBalance();
+    }
 
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+    private async Task LoadCurrentBalance()
+    {
+        var totalInflow = (await CashFlowService.LoadCashFlowAsync())
+            .Where(cf => cf.TransactionType == "income")
+            .Sum(cf => cf.Amount);
+
+        var totalExpense = (await CashFlowService.LoadCashFlowAsync())
+            .Where(cf => cf.TransactionType == "expense")
+            .Sum(cf => cf.Amount);
+
+        var pendingDebts = (await DebtServices.LoadCashDebtAsync())
+            .Where(d => string.Equals(d.DebtStatus?.Trim(), "Pending", StringComparison.OrdinalIgnoreCase))
+            .Sum(d => d.Amount);
+
+        var totalDebts = await DebtServices.GetTotalDebtsAsync();
+        var clearedDebts = totalDebts - pendingDebts;
+
+        currentBalance = ((totalInflow - totalExpense) +pendingDebts)- clearedDebts;
+    }
+    private bool ShouldDisplayBalance()
+    {
+        var currentPage = NavigationManager.Uri;
+        return currentPage.Contains("/dashboard") || currentPage.Contains("/debtTransactions") || currentPage.Contains("/cashflow");
     }
 }
